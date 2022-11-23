@@ -11,17 +11,30 @@
 <div #conainerEditor class="imageEditor" id="tui-image-editor-container"></div> -->
 
 
+<ng-container >
 
-<div style="display: none;">
-    <input type="hidden" name="" #imageSelected>
-</div>
-<button id="save" class="saving" (click)="save()">save</button>
-<button id="generate" class="generate" (click)="generate()">generate</button>
-<div class="container">
-    <div class="imageChoise" id="imageLook">
-        <div *ngFor="let item of characters;">
-            <img [src]="item.image" class="imgsl" alt="" (click)="updateImage(item)" #img [attr.data-id]="item.id">
+
+        <div style="display: none;">
+            <input type="hidden" name="" #imageSelected>
         </div>
-    </div>
-    <div class="imageEditor" id="tui-image-editor-container" #conainerEditor></div>
-</div>
+        <button id="save" class="saving" (click)="save()">save</button>
+        <button id="generate" class="generate" (click)="generate()">
+            <span> générer video </span> 
+            <mat-spinner *ngIf="loader == true" [diameter]="20"></mat-spinner>
+        </button>
+        <div class="container">
+            <div class="imageChoise" id="imageLook">
+                <div *ngFor="let item of characters;">
+                    <img [src]="item.image" class="imgsl" alt="" (click)="updateImage(item)" #img [attr.data-id]="item.id">
+                </div>
+            </div>
+            <div class="imageEditor" id="tui-image-editor-container" #conainerEditor></div>
+        </div>
+
+
+        <button (click)="play()"> play </button>
+        <video #videoPlayer id="videoPlayer" width="50%" controls muted="muted" >
+            <source [src] = "cameraSrc" type="video/mp4" />
+        </video>
+</ng-container>
+

@@ -19,6 +19,7 @@ var videoshow = require('videoshow');
 const project_dir = process.cwd();
 const EXT = ['JPEG', 'PNG', 'JPG'];
 import { v4 as uuidv4 } from 'uuid';
+import { editFileName, imageFileFilter } from './helpers/images/imageEdite.helper';
 const videoOptions = {
   fps: 25,
   transition: true,
@@ -32,33 +33,7 @@ const videoOptions = {
   pixelFormat: 'yuv420p',
 };
 
-const editFileName = (req, file, callback) => {
-  const name = file.originalname.split('.')[0];
-  const fileExtName = extname(file.originalname);
-  const randomName = Array(4)
-    .fill(null)
-    .map(() => Math.round(Math.random() * 16).toString(16))
-    .join('');
-  callback(null, `${name}-${randomName}${fileExtName}`);
-};
 
-const imageFileFilter = (req, file, callback) => {
-  if (
-    !parse(file.originalname)
-      .ext.toLowerCase()
-      .match(/\.(jpg|jpeg|png)$/)
-  ) {
-    return callback(
-      new Error(
-        'Only image files are allowed! [' +
-          parse(file.originalname).ext +
-          '] (x)',
-      ),
-      false,
-    );
-  }
-  callback(null, true);
-};
 
 @Controller('api')
 export class AppController {

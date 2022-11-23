@@ -1,41 +1,95 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Header, Headers, HttpStatus, Param, Post, Res, UploadedFiles, UseInterceptors } from '@nestjs/common';
 var videoshow = require('videoshow');
 import { VideoShow } from './classes/videoShow.class';
 import { v4 as uuidv4 } from 'uuid';
+import {  FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { editFileName, imageFileFilter } from './helpers/images/imageEdite.helper';
+import { Response } from 'express';
+import { createReadStream, statSync } from 'fs';
 
 @Controller('storie')
 export class StoriesController {
   constructor() {}
 
-  @Post('generatingVideo')
-  async makingVideo(@Body() infos: any): Promise<boolean> {
+  makingVideo(infos): Promise<string> {
     return new Promise((resolve, reject) => {
-      let video = new VideoShow('640x360', infos.infos);
+      let videoname = 'video-' + uuidv4();
+      let video = new VideoShow('640x?', infos);
       let images = [];
       video.items.forEach((elm: any) => {
         images.push({
           path: elm.path,
           loop: 5,
-          caption: 'test',
           disableFadeOut: true,
-          filters:
-            "zoompan=z='if(lte(zoom,1.0),1.5,max(1.001,zoom-0.0015))':d=125",
+          filters:"zoompan=z='zoom+0.001':x=0:y=0:d=250",
         });
       });
+      console.log(images.length+ " image to video start ")
       videoshow(images, video.options)
-        .save(process.cwd() + '/assets/videos/video-' + uuidv4() + '.mp4')
+        .save(process.cwd() + '/assets/videos/'+ videoname+'.mp4')
         .on('start', function (command) {
+          console.log(command)
           console.log('start make');
         })
         .on('error', function (err, stdout, stderr) {
           console.log(err);
           console.log(stdout);
           console.log(stderr);
-          reject(false);
+          reject(err);
         })
         .on('end', function (output) {
-          resolve(true);
+          console.log('end')
+          resolve(JSON.stringify(videoname));
         });
     });
+  }
+
+
+  @Post('multi')
+  @UseInterceptors(
+    FilesInterceptor('files', 20, {
+      storage: diskStorage({
+        destination: './assets/images',
+        filename: editFileName,
+      }),
+      fileFilter: imageFileFilter,
+    }),
+  )
+  async uploadMultipleFiles(@UploadedFiles() files) {
+    return new Promise((resolve,reject)=>{
+      this.makingVideo(files).then(res=>{resolve(res)}).catch(err=>{reject(err)})
+    })
+  }
+
+
+
+  @Get('stream/:name')
+  @Header('Accept-Ranges', 'bytes')
+  @Header('Content-Type', 'video/mp4')
+  async getStreamVideo(@Param('name') name: string, @Headers() headers, @Res() res: Response) {
+
+    const videoPath = `assets/videos/${name}.mp4`;
+    const { size } = statSync(videoPath);
+    const videoRange = headers.range;
+    if (videoRange) {
+      const parts = videoRange.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : size - 1;
+      const chunksize = (end - start) + 1;
+      const readStreamfile = createReadStream(videoPath, { start, end, highWaterMark:60 });
+      const head = {
+        'Content-Range': `bytes ${start}-${end}/${size}`,
+        'Content-Length': chunksize,
+      };
+      res.writeHead(HttpStatus.PARTIAL_CONTENT, head); //206
+      readStreamfile.pipe(res);
+    } else {
+      const head = {
+        'Content-Length': size,
+      };
+      res.writeHead(HttpStatus.OK, head);//200
+      createReadStream(videoPath).pipe(res);
+    }
   }
 }

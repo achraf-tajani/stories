@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import {
   AfterViewInit,
   Component,
@@ -19,12 +19,15 @@ class ImageSnippet {
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements AfterViewInit {
+  @ViewChild('videoPlayer', { static: false }) videoPlayer?: ElementRef;
   @ViewChild('conainerImage', { static: false }) conainerImage?: ElementRef;
   @ViewChild('imageSelected', { static: false }) imageSelected?: ElementRef;
   @ViewChild('fileInput', { static: false }) fileInput?: ElementRef;
   @ViewChild('filesInput', { static: false }) filesInput?: ElementRef;
   @ViewChild('conainerEditor', { static: false }) conainerEditor?: ElementRef;
   @ViewChildren('img') img?: ElementRef[];
+  loader:boolean = false;
+  cameraSrc:string = '';
   transition: { tr: boolean; id: number; name: string }[] = [];
   url = '/api/single';
   urll = '/api/multi';
@@ -52,21 +55,52 @@ export class AppComponent implements AfterViewInit {
       usageStatistics: false,
     });
   }
-
+   dataURLtoFile (dataurl:any, filename:any){
+    const arr = dataurl.split(',')
+    const mime = arr[0].match(/:(.*?);/)[1]
+    const bstr = atob(arr[1])
+    let n = bstr.length
+    const u8arr = new Uint8Array(n)
+    while (n) {
+      u8arr[n-1] = bstr.charCodeAt(n-1)
+      n -= 1 // to make eslint happy
+    }
+    return new File([u8arr], filename, { type: mime })
+  }
   generate() {
+    this.loader = true;
     let items: object[] = [];
+    const data = new FormData()
     this.characters.forEach((elm) => {
-      items.push({
-        path: elm.image,
-      });
+      if(elm.image.includes('data:image/')){
+        let file = this.dataURLtoFile(elm.image,'img'+elm.id+".jpeg");
+        data.append('files', file, file.name)
+      }else {
+        items.push({path:elm.image})
+      }
     });
+    
+
     this.http
-      .post('/storie/generatingVideo', { infos: items })
-      .subscribe((d) => {
-        console.log(d);
+      .post('/storie/multi', data)
+      .subscribe((res) => {
+        this.loader = false;
+        this.cameraSrc = "http://localhost:3000/storie/stream/"+res
+
+      },(err)=>{
+        this.loader = false;
+        console.log(err)
       });
   }
 
+  play(){
+    if( this.videoPlayer){
+      this.videoPlayer.nativeElement.setAttribute('src',this.cameraSrc);
+      this.videoPlayer.nativeElement.play();
+
+      
+    }
+  }
   updateImage(char: any) {
     if (this.imageSelected?.nativeElement) {
       this.imageSelected.nativeElement.value = char.id;
@@ -91,7 +125,7 @@ export class AppComponent implements AfterViewInit {
         const elementFromCharacter = this.characters.filter(
           (elm) => elm.id == this.imageSelected?.nativeElement.value
         )[0];
-        elementFromCharacter.image = this.imageEditor.toDataURL();
+        elementFromCharacter.image =this.imageEditor.toDataURL({ 'format':'jpeg'});
         this.elementRef.nativeElement.querySelector('.tie-btn-reset').click();
         if (this.imageSelected?.nativeElement) {
           this.imageSelected.nativeElement.value = undefined;

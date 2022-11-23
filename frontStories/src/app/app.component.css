@@ -1,6 +1,7 @@
 body {
     padding: 0;
     margin: 0;
+    background-color: #282828;
 }
 
 .container {
@@ -10,7 +11,7 @@ body {
 }
 
 .imageChoise {
-    width: 25%;
+    width: 20%;
     height: 100vh;
     overflow-y: scroll;
     overflow-x: hidden;
@@ -55,4 +56,14 @@ body {
     color: black;
     font-family: 'Noto Sans', sans-serif;
     font-size: 12px;
+}
+
+
+.loader{
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-y:hidden;
 }
