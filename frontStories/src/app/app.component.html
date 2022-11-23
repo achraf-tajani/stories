@@ -1,0 +1,27 @@
+<!-- <div>
+    single <input type="file" #fileInput />
+    <button (click)="fileUpload()">send</button><br /><br />
+    multiple
+    <input type="file" (change)="makingSomeStuf()" #filesInput multiple />
+    <button (click)="filesUpload()">send</button><br /><br />
+</div>
+<div #conainerImage></div>
+
+
+<div #conainerEditor class="imageEditor" id="tui-image-editor-container"></div> -->
+
+
+
+<div style="display: none;">
+    <input type="hidden" name="" #imageSelected>
+</div>
+<button id="save" class="saving" (click)="save()">save</button>
+<button id="generate" class="generate" (click)="generate()">generate</button>
+<div class="container">
+    <div class="imageChoise" id="imageLook">
+        <div *ngFor="let item of characters;">
+            <img [src]="item.image" class="imgsl" alt="" (click)="updateImage(item)" #img [attr.data-id]="item.id">
+        </div>
+    </div>
+    <div class="imageEditor" id="tui-image-editor-container" #conainerEditor></div>
+</div>
