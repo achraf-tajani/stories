@@ -27,7 +27,9 @@ export class AppComponent implements AfterViewInit {
   @ViewChild('conainerEditor', { static: false }) conainerEditor?: ElementRef;
   @ViewChildren('img') img?: ElementRef[];
   loader:boolean = false;
+  preview:boolean= false;
   cameraSrc:string = '';
+  nameVideo:string = '';
   transition: { tr: boolean; id: number; name: string }[] = [];
   url = '/api/single';
   urll = '/api/multi';
@@ -39,7 +41,7 @@ export class AppComponent implements AfterViewInit {
   ngAfterViewInit(): void {
     this.http
       .get('https://rickandmortyapi.com/api/character')
-      .subscribe((res: any) => (this.characters = res.results.splice(0, 5)));
+      .subscribe((res: any) => (this.characters = res.results));
     this.imageEditor = new ImageEditor(this.conainerEditor?.nativeElement, {
       includeUI: {
         loadImage: {
@@ -85,7 +87,9 @@ export class AppComponent implements AfterViewInit {
       .post('/storie/multi', data)
       .subscribe((res) => {
         this.loader = false;
-        this.cameraSrc = "http://localhost:3000/storie/stream/"+res
+        this.preview = true;
+        this.nameVideo = JSON.stringify(res);
+        this.cameraSrc = "/storie/stream/"+res
 
       },(err)=>{
         this.loader = false;
@@ -115,8 +119,10 @@ export class AppComponent implements AfterViewInit {
         console.log('error: ', message);
       });
   }
-
   save() {
+    window.open("/storie/video/"+this.nameVideo.replace('"','').replace('"',''));
+  }
+  draw() {
     if (this.imageSelected) {
       if (
         this.imageSelected.nativeElement.value.length > 0 &&

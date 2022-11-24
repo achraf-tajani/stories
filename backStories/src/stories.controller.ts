@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Header, Headers, HttpStatus, Param, Post, Res, UploadedFiles, UseInterceptors } from '@nestjs/common';
 var videoshow = require('videoshow');
+const fsExtra = require('fs-extra');
 import { VideoShow } from './classes/videoShow.class';
 import { v4 as uuidv4 } from 'uuid';
 import {  FilesInterceptor } from '@nestjs/platform-express';
@@ -13,38 +14,49 @@ export class StoriesController {
   constructor() {}
 
   makingVideo(infos): Promise<string> {
+    const _this = this;
     return new Promise((resolve, reject) => {
       let videoname = 'video-' + uuidv4();
-      let video = new VideoShow('640x?', infos);
+      let video = new VideoShow('640x480', infos);
       let images = [];
       video.items.forEach((elm: any) => {
         images.push({
           path: elm.path,
           loop: 5,
-          disableFadeOut: true,
-          filters:"zoompan=z='zoom+0.001':x=0:y=0:d=250",
+          disableFadeOut : true,disableFadeIn :true,
+          // filters:"zoompan=z='zoom+0.001':x=0:y=0:d=120",
+          // filters:"[0]scale=640:-2,setsar=1:1[out];[out]crop=640:480[out];[out]scale=8000:-1,zoompan=z='zoom+0.001':x=iw/2-(iw/zoom/2):y=ih/2-(ih/zoom/2):d=250"
         });
       });
       console.log(images.length+ " image to video start ")
-      videoshow(images, video.options)
-        .save(process.cwd() + '/assets/videos/'+ videoname+'.mp4')
-        .on('start', function (command) {
-          console.log(command)
-          console.log('start make');
-        })
-        .on('error', function (err, stdout, stderr) {
-          console.log(err);
-          console.log(stdout);
-          console.log(stderr);
-          reject(err);
-        })
-        .on('end', function (output) {
-          console.log('end')
-          resolve(JSON.stringify(videoname));
-        });
+      if(images.length>0) {
+        videoshow(images, video.options)
+          .save(process.cwd() + '/assets/videos/'+ videoname+'.mp4')
+          .on('start', function (command) {
+            console.log(command)
+            console.log('start make');
+          })
+          .on('error', function (err, stdout, stderr) {
+            console.log(err);
+            console.log(stdout);
+            console.log(stderr);
+            reject(err);
+          })
+          .on('end', function (output) {
+            console.log('____')
+            _this.clearImagesDir();
+            console.log('finish empty')
+            resolve(JSON.stringify(videoname));
+          });
+      }else {
+        reject(JSON.stringify('empty images'))
+      }
     });
   }
-
+  async clearImagesDir() {
+    console.log('start clean')
+    await fsExtra.emptyDirSync(process.cwd() + '/assets/images');
+  }
 
   @Post('multi')
   @UseInterceptors(
@@ -90,6 +102,37 @@ export class StoriesController {
       };
       res.writeHead(HttpStatus.OK, head);//200
       createReadStream(videoPath).pipe(res);
+    }
+  }
+
+
+  @Get('video/:name')
+  seeUploadedVideo(@Param('name') name, @Res() res) {
+    let pathFile = '';
+    if(name.includes('.mp4')) {
+       pathFile  = process.cwd() + '/assets/videos/'+name;
+    }else {
+      pathFile  = process.cwd() + '/assets/videos/'+name+'.mp4';
+    }
+    try{
+      return res.download(pathFile)
+    }catch(err){
+      throw err; 
+    }
+  }
+
+  @Get('rvideo/:name')
+  removeVideo(@Param('name') name, @Res() res) {
+    let pathFile = '';
+    if(name.includes('.mp4')) {
+       pathFile  = process.cwd() + '/assets/videos/'+name;
+    }else {
+      pathFile  = process.cwd() + '/assets/videos/'+name+'.mp4';
+    }
+    try{
+      return res.download(pathFile)
+    }catch(err){
+      throw err; 
     }
   }
 }

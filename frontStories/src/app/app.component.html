@@ -9,7 +9,7 @@
 
 
 <div #conainerEditor class="imageEditor" id="tui-image-editor-container"></div> -->
-
+<!-- 
 
 <ng-container >
 
@@ -17,24 +17,34 @@
         <div style="display: none;">
             <input type="hidden" name="" #imageSelected>
         </div>
-        <button id="save" class="saving" (click)="save()">save</button>
-        <button id="generate" class="generate" (click)="generate()">
-            <span> générer video </span> 
-            <mat-spinner *ngIf="loader == true" [diameter]="20"></mat-spinner>
-        </button>
+        <div class="actions">
+            <button  class="saving" (click)="save()" *ngIf="preview">save</button>
+            <button  class="saving" (click)="play()" *ngIf="preview">preview</button>
+            <button  class="saving" (click)="draw()" *ngIf="!preview">draw</button>
+            <button id="generate" class="saving" (click)="generate()" *ngIf="!preview">
+                <span> générer video </span> 
+                <mat-spinner *ngIf="loader == true" [diameter]="20"></mat-spinner>
+            </button>
+        </div>
         <div class="container">
             <div class="imageChoise" id="imageLook">
                 <div *ngFor="let item of characters;">
                     <img [src]="item.image" class="imgsl" alt="" (click)="updateImage(item)" #img [attr.data-id]="item.id">
                 </div>
             </div>
-            <div class="imageEditor" id="tui-image-editor-container" #conainerEditor></div>
+            <div class="imageEditor" id="tui-image-editor-container" #conainerEditor *ngIf="!preview"></div>
+            <div class="videoPlayer" *ngIf="preview">
+                <video #videoPlayer id="videoPlayer" width="50%" controls muted="muted" >
+                    <source [src] = "cameraSrc" type="video/mp4" />
+                </video>
+            </div>
         </div>
 
 
-        <button (click)="play()"> play </button>
-        <video #videoPlayer id="videoPlayer" width="50%" controls muted="muted" >
-            <source [src] = "cameraSrc" type="video/mp4" />
-        </video>
 </ng-container>
 
+
+ -->
+
+
+ <app-storie-simple></app-storie-simple>
