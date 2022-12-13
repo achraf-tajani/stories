@@ -9,6 +9,7 @@ import {
   ViewChildren,
 } from '@angular/core';
 import ImageEditor from 'tui-image-editor';
+import { ApiImageModel, PhotosModel } from './models/api.model';
 
 class ImageSnippet {
   constructor(public src: string, public file: File) {}
@@ -24,7 +25,9 @@ export class AppComponent implements AfterViewInit {
   @ViewChild('imageSelected', { static: false }) imageSelected?: ElementRef;
   @ViewChild('fileInput', { static: false }) fileInput?: ElementRef;
   @ViewChild('filesInput', { static: false }) filesInput?: ElementRef;
+  @ViewChild('allImages', { static: false }) allImages?: ElementRef;
   @ViewChild('conainerEditor', { static: false }) conainerEditor?: ElementRef;
+  
   @ViewChildren('img') img?: ElementRef[];
   loader:boolean = false;
   preview:boolean= false;
@@ -34,14 +37,25 @@ export class AppComponent implements AfterViewInit {
   url = '/api/single';
   urll = '/api/multi';
   imageEditor: any;
-  characters: { created: string; id: string; image: string; gender: string }[] =
-    [];
-  constructor(private http: HttpClient, private elementRef: ElementRef) {}
-
+  characters: { created: string; id: string; image: string; gender: string }[] = [];
+  images:PhotosModel[]= [];
+  imagesExport :string[] =  [];
+  searchValue: string='';
+  constructor(private http: HttpClient, private elementRef: ElementRef,private renderer2:Renderer2) {}
+  search(){
+    const httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type':  'application/json',
+        Authorization: '563492ad6f917000010000011b7eb221a8e242ab98c2e65fba0955bb'
+      })
+    };
+    this.images = [];
+    this.http.get<ApiImageModel>(`https://api.pexels.com/v1/search?query=${this.searchValue}`,httpOptions).subscribe((res)=>{this.images = res.photos})
+  }
   ngAfterViewInit(): void {
-    this.http
-      .get('https://rickandmortyapi.com/api/character')
-      .subscribe((res: any) => (this.characters = res.results));
+    // this.http
+    //   .get('https://rickandmortyapi.com/api/character')
+    //   .subscribe((res: any) => (this.characters = res.results));
     this.imageEditor = new ImageEditor(this.conainerEditor?.nativeElement, {
       includeUI: {
         loadImage: {
@@ -56,6 +70,8 @@ export class AppComponent implements AfterViewInit {
       cssMaxHeight: 500,
       usageStatistics: false,
     });
+
+   // this.http.get<ApiImageModel>('https://api.pexels.com/v1/search?query=spider',httpOptions).subscribe((res)=>{this.images = res.photos})
   }
    dataURLtoFile (dataurl:any, filename:any){
     const arr = dataurl.split(',')
@@ -70,16 +86,14 @@ export class AppComponent implements AfterViewInit {
     return new File([u8arr], filename, { type: mime })
   }
   generate() {
+    
     this.loader = true;
     let items: object[] = [];
     const data = new FormData()
-    this.characters.forEach((elm) => {
-      if(elm.image.includes('data:image/')){
-        let file = this.dataURLtoFile(elm.image,'img'+elm.id+".jpeg");
+    this.imagesExport.forEach((elm,i) => {
+        let file = this.dataURLtoFile(elm,'img'+(++i)+".jpeg");
         data.append('files', file, file.name)
-      }else {
-        items.push({path:elm.image})
-      }
+
     });
     
 
@@ -110,7 +124,7 @@ export class AppComponent implements AfterViewInit {
       this.imageSelected.nativeElement.value = char.id;
     }
     this.imageEditor
-      .loadImageFromURL(char.image, char.id)
+      .loadImageFromURL(char.src.large, char.id)
       .then((result: any) => {
         // console.log('old : ' + result.oldWidth + ', ' + result.oldHeight);
         // console.log('new : ' + result.newWidth + ', ' + result.newHeight);
@@ -128,10 +142,15 @@ export class AppComponent implements AfterViewInit {
         this.imageSelected.nativeElement.value.length > 0 &&
         this.imageSelected.nativeElement.value != 'undefined'
       ) {
-        const elementFromCharacter = this.characters.filter(
+        const elementFromCharacter = this.images.filter(
           (elm) => elm.id == this.imageSelected?.nativeElement.value
         )[0];
-        elementFromCharacter.image =this.imageEditor.toDataURL({ 'format':'jpeg'});
+        let newImage = this.imageEditor.toDataURL({ 'format':'jpeg'});
+          const img = this.renderer2.createElement("IMG");
+          img.src = newImage;
+          this.imagesExport.push(newImage);
+          // this.renderer2.appendChild(,img);
+          this.allImages?.nativeElement.appendChild(img)
         this.elementRef.nativeElement.querySelector('.tie-btn-reset').click();
         if (this.imageSelected?.nativeElement) {
           this.imageSelected.nativeElement.value = undefined;

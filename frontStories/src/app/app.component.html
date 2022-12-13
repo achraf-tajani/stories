@@ -9,7 +9,6 @@
 
 
 <div #conainerEditor class="imageEditor" id="tui-image-editor-container"></div> -->
-<!-- 
 
 <ng-container >
 
@@ -27,24 +26,44 @@
             </button>
         </div>
         <div class="container">
-            <div class="imageChoise" id="imageLook">
-                <div *ngFor="let item of characters;">
-                    <img [src]="item.image" class="imgsl" alt="" (click)="updateImage(item)" #img [attr.data-id]="item.id">
+            <ng-container *ngIf="!preview">
+                <div class="editor-wrap">
+                    <div class="imageEditor" id="tui-image-editor-container" #conainerEditor ></div>
+                    <div class="visuaImage" #allImages></div>
                 </div>
-            </div>
-            <div class="imageEditor" id="tui-image-editor-container" #conainerEditor *ngIf="!preview"></div>
-            <div class="videoPlayer" *ngIf="preview">
-                <video #videoPlayer id="videoPlayer" width="50%" controls muted="muted" >
-                    <source [src] = "cameraSrc" type="video/mp4" />
-                </video>
+            </ng-container>
+
+            <ng-container *ngIf="preview">
+                <div class="videoPlayer">
+                    <video #videoPlayer id="videoPlayer" width="50%" controls muted="muted" >
+                        <source [src] = "cameraSrc" type="video/mp4" />
+                    </video>
+                </div>
+            </ng-container>
+
+
+            <div class="imageChoise" id="imageLook">
+                <!-- <div *ngFor="let item of characters;">
+                    <img [src]="item.image" class="imgsl" alt="" (click)="updateImage(item)" #img [attr.data-id]="item.id">
+                </div> -->
+                <div class="searchPr"><input type="text" [(ngModel)]="searchValue"> <button (click)="search()"> search</button></div>
+                <div *ngFor="let item of images" class="wrap-img">
+                    <img [src]="item.src.small" class="imgsl" alt="" (click)="updateImage(item)" #img [attr.data-id]="item.id">
+                </div>
             </div>
         </div>
 
+</ng-container>
 
+<ng-container > 
+
+    <div>
+        <video src=""></video>
+        <button> generate</button>
+    </div>
 </ng-container>
 
 
- -->
 
 
- <app-storie-simple></app-storie-simple>
+

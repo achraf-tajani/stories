@@ -17,14 +17,17 @@ export class StoriesController {
     const _this = this;
     return new Promise((resolve, reject) => {
       let videoname = 'video-' + uuidv4();
-      let video = new VideoShow('640x480', infos);
+      let video = new VideoShow('650x940', infos);
       let images = [];
       video.items.forEach((elm: any) => {
         images.push({
           path: elm.path,
-          loop: 5,
-          disableFadeOut : true,disableFadeIn :true,
+          loop: 2,
+          disableFadeOut : false,
+          disableFadeIn :false,
+          // filers:"zoompan=z='zoom+0.001':x=0:y=0:d=120"
           // filters:"zoompan=z='zoom+0.001':x=0:y=0:d=120",
+          //zoompan=z='zoom+0.001':x=iw/2-(iw/zoom/2):y=ih/2-(ih/zoom/2):d=3*60:s=650x940
           // filters:"[0]scale=640:-2,setsar=1:1[out];[out]crop=640:480[out];[out]scale=8000:-1,zoompan=z='zoom+0.001':x=iw/2-(iw/zoom/2):y=ih/2-(ih/zoom/2):d=250"
         });
       });
